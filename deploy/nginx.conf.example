@@ -1,0 +1,63 @@
+# Viking Bilet Takip — Nginx Örnek Yapılandırması
+
+```nginx
+server {
+    listen 80;
+    server_name bilet.example.com;
+
+    # Frontend (Vite build çıktısı)
+    root /var/www/viking-app/frontend/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Backend API proxy
+    location /api/ {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+## Deploy Adımları
+
+```bash
+# 1. Projeyi sunucuya klonla
+git clone <repo> /var/www/viking-app
+cd /var/www/viking-app
+
+# 2. Backend
+cd backend
+cp .env.example .env
+# .env düzenle (production değerleri)
+npm install --production
+npm run db:init
+node scripts/create-admin.js admin admin@example.com GucluSifre123
+
+# 3. Frontend build
+cd ../frontend
+npm install
+npm run build
+
+# 4. PM2 ile backend başlat
+cd ..
+pm2 start ecosystem.config.js
+pm2 save
+pm2 startup
+
+# 5. Nginx yapılandırmasını aktif et
+sudo ln -s /var/www/viking-app/deploy/nginx.conf /etc/nginx/sites-enabled/viking
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+## SSL (Let's Encrypt)
+
+```bash
+sudo certbot --nginx -d bilet.example.com
+```

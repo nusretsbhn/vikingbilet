@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-base: #f5f6f8;
+    --bg-surface: #ffffff;
+    --bg-header: #f1f3f5;
+    --bg-row-alt: #fafbfc;
+    --bg-row-hover: #eef2f7;
+    --border: #d1d5db;
+    --border-focus: #2563eb;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-dim: #9ca3af;
+    --accent-blue: #2563eb;
+    --accent-green: #059669;
+    --accent-amber: #d97706;
+    --accent-red: #dc2626;
+    --komisyon: #059669;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-base text-primary font-ui text-base antialiased;
+    margin: 0;
+    min-height: 100vh;
+    color: #111827;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+
+  input,
+  select,
+  textarea {
+    color: #111827;
+  }
+}
+
+@layer components {
+  .data-table th,
+  .data-table td {
+    @apply px-2.5 py-1.5 text-sm whitespace-nowrap text-primary;
+  }
+
+  .data-table th {
+    @apply font-semibold text-xs uppercase tracking-wide text-secondary bg-header;
+  }
+
+  .data-table tr {
+    @apply border-b border-border h-8;
+  }
+
+  .data-table tbody tr:nth-child(even) {
+    @apply bg-row-alt;
+  }
+
+  .data-table tbody tr:hover {
+    @apply bg-row-hover;
+  }
+
+  .number-cell {
+    @apply font-data text-right text-primary;
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  @media (min-width: 1024px) {
+    .lg\:safe-bottom-none {
+      padding-bottom: 0;
+    }
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-card {
+    @apply bg-surface border border-border rounded-xl p-3 sm:p-4;
+  }
+}
