@@ -30,6 +30,7 @@ const BILET_FIELDS = [
 
 function buildFilterQuery(query) {
   const {
+    tur_tarihleri,
     tarih_baslangic,
     tarih_bitis,
     gelen_yer,
@@ -46,13 +47,24 @@ function buildFilterQuery(query) {
   const values = [];
   let idx = 1;
 
-  if (tarih_baslangic) {
-    conditions.push(`tur_tarihi >= $${idx++}`);
-    values.push(tarih_baslangic);
-  }
-  if (tarih_bitis) {
-    conditions.push(`tur_tarihi <= $${idx++}`);
-    values.push(tarih_bitis);
+  if (tur_tarihleri) {
+    const dates = tur_tarihleri
+      .split(',')
+      .map((d) => d.trim())
+      .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d));
+    if (dates.length > 0) {
+      conditions.push(`tur_tarihi = ANY($${idx++}::date[])`);
+      values.push(dates);
+    }
+  } else {
+    if (tarih_baslangic) {
+      conditions.push(`tur_tarihi >= $${idx++}`);
+      values.push(tarih_baslangic);
+    }
+    if (tarih_bitis) {
+      conditions.push(`tur_tarihi <= $${idx++}`);
+      values.push(tarih_bitis);
+    }
   }
   if (gelen_yer) {
     conditions.push(`gelen_yer ILIKE $${idx++}`);

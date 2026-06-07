@@ -14,8 +14,7 @@ function filtersFromSearchParams(searchParams) {
   return {
     page: searchParams.get('page') || '1',
     limit: searchParams.get('limit') || '100',
-    tarih_baslangic: searchParams.get('tarih_baslangic') || '',
-    tarih_bitis: searchParams.get('tarih_bitis') || '',
+    tur_tarihleri: searchParams.get('tur_tarihleri') || '',
     gelen_yer: searchParams.get('gelen_yer') || '',
     isim: searchParams.get('isim') || '',
     durum: searchParams.get('durum') || '',
@@ -112,8 +111,7 @@ export default function BiletlerPage() {
   };
 
   const activeFilterCount = [
-    filters.tarih_baslangic,
-    filters.tarih_bitis,
+    filters.tur_tarihleri,
     filters.gelen_yer,
     filters.isim,
     filters.durum,

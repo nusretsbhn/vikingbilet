@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import BiletImport from './BiletImport';
+import MultiDatePicker from './MultiDatePicker';
 
 const DURUM_OPTIONS = ['', 'Tahsil edildi', 'Görülmedi', 'Misafir'];
 
@@ -21,6 +22,10 @@ export default function BiletFilters({
   const [importOpen, setImportOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
+  useEffect(() => {
+    setLocal(filters);
+  }, [filters]);
+
   const handleChange = (key, value) => {
     setLocal((prev) => ({ ...prev, [key]: value }));
   };
@@ -34,8 +39,7 @@ export default function BiletFilters({
     const cleared = {
       page: '1',
       limit: local.limit || '100',
-      tarih_baslangic: '',
-      tarih_bitis: '',
+      tur_tarihleri: '',
       gelen_yer: '',
       isim: '',
       durum: '',
@@ -49,19 +53,10 @@ export default function BiletFilters({
 
   const filterFields = (
     <>
-      <Input
-        label="Tarih Başlangıç"
-        type="date"
-        value={local.tarih_baslangic}
-        onChange={(e) => handleChange('tarih_baslangic', e.target.value)}
-        className="w-full sm:w-36"
-      />
-      <Input
-        label="Tarih Bitiş"
-        type="date"
-        value={local.tarih_bitis}
-        onChange={(e) => handleChange('tarih_bitis', e.target.value)}
-        className="w-full sm:w-36"
+      <MultiDatePicker
+        value={local.tur_tarihleri || ''}
+        onChange={(value) => handleChange('tur_tarihleri', value)}
+        className="w-full sm:w-44"
       />
       <Input
         label="Acenta Ara"
