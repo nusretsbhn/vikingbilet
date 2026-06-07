@@ -11,6 +11,7 @@ const COL = {
   FREE_KISI: 7,
   SATIS_FIYATI: 8,
   ALIS_FIYATI: 9,
+  TEKNEDE_ODEME: 10,
   OTEL: 12,
   ISIM: 15,
   GELEN_YER: 16,
@@ -71,26 +72,14 @@ export function parseVikingPreview(buffer) {
 
     total++;
     if (preview.length < 5) {
-      const satisRaw = parseFloat(cell(row, COL.SATIS_FIYATI)) || 0;
-      const alisRaw = parseFloat(cell(row, COL.ALIS_FIYATI)) || 0;
-      let satis = 0;
-      let alis = 0;
-      if (satisRaw > 0 && alisRaw > 0) {
-        satis = alisRaw;
-        alis = Math.max(0, 2 * alisRaw - satisRaw);
-      } else if (alisRaw > 0) {
-        satis = alisRaw;
-      } else if (satisRaw > 0) {
-        satis = satisRaw;
-      }
-
       preview.push({
         'Tur Tarihi': turTarihi,
         'Bilet No': cell(row, COL.BILET_NO) || '—',
         'Büyük': cell(row, COL.BUYUK_KISI) || 0,
         'Küçük': cell(row, COL.KUCUK_KISI) || 0,
-        'Satış': satis,
-        'Alış': alis,
+        'Satış Fiyatı': cell(row, COL.SATIS_FIYATI) ?? '—',
+        'Alış Fiyatı': cell(row, COL.ALIS_FIYATI) ?? '—',
+        'To Pay': cell(row, COL.TEKNEDE_ODEME) ?? '—',
         'İsim': cell(row, COL.ISIM) || '—',
         'Acenta': cell(row, COL.GELEN_YER) || '—',
         'Durum': cell(row, COL.DURUM) || '—',

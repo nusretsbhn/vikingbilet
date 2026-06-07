@@ -334,7 +334,7 @@ export default function AcentalarPage() {
             placeholder="Örn: Nakit tahsilat, havale..."
           />
           <p className="text-xs text-secondary">
-            To Pay ödemeleri bilet kayıtlarındaki &quot;Teknede Ödeme&quot; alanından otomatik hesaplanır.
+            To Pay ödemeleri bilet kayıtlarındaki &quot;To Pay&quot; alanından otomatik hesaplanır.
           </p>
         </div>
       </Modal>

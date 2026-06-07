@@ -36,9 +36,9 @@ function cell(row, idx) {
 }
 
 function parseNum(val) {
-  if (val === null || val === undefined || val === '') return 0;
+  if (val === null || val === undefined || val === '') return null;
   const n = parseFloat(String(val).replace(',', '.'));
-  return Number.isNaN(n) ? 0 : n;
+  return Number.isNaN(n) ? null : n;
 }
 
 function parseIntSafe(val) {
@@ -96,26 +96,9 @@ function rowToBilet(row) {
   const turTarihi = excelDateToISO(cell(row, COL.TUR_TARIHI));
   if (!turTarihi) return null;
 
-  const satisRaw = parseNum(cell(row, COL.SATIS_FIYATI));
-  const alisRaw = parseNum(cell(row, COL.ALIS_FIYATI));
-
-  // Viking Excel fiyat mantığı:
-  // - Toplam ciro Excel'de SUM(col9) = 2.698.280 ₺
-  // - İki sütun doluysa: col8-col9 = komisyon, col9 = satış tutarı
-  // - Yalnızca col9 doluysa: satış = col9, alış = 0
-  let satis_fiyati = 0;
-  let alis_fiyati = 0;
-
-  if (alisRaw > 0 && satisRaw > 0) {
-    satis_fiyati = alisRaw;
-    alis_fiyati = Math.max(0, 2 * alisRaw - satisRaw);
-  } else if (alisRaw > 0) {
-    satis_fiyati = alisRaw;
-    alis_fiyati = 0;
-  } else if (satisRaw > 0) {
-    satis_fiyati = satisRaw;
-    alis_fiyati = 0;
-  }
+  const satisRaw = cell(row, COL.SATIS_FIYATI);
+  const alisRaw = cell(row, COL.ALIS_FIYATI);
+  const toPayRaw = cell(row, COL.TEKNEDE_ODEME);
 
   return {
     m: cell(row, COL.M),
@@ -125,9 +108,9 @@ function rowToBilet(row) {
     buyuk_kisi: parseIntSafe(cell(row, COL.BUYUK_KISI)),
     kucuk_kisi: parseIntSafe(cell(row, COL.KUCUK_KISI)),
     free_kisi: parseIntSafe(cell(row, COL.FREE_KISI)),
-    satis_fiyati,
-    alis_fiyati,
-    teknede_odeme: parseNum(cell(row, COL.TEKNEDE_ODEME)),
+    satis_fiyati: parseNum(satisRaw),
+    alis_fiyati: parseNum(alisRaw),
+    teknede_odeme: parseNum(toPayRaw) ?? 0,
     otel: cell(row, COL.OTEL),
     oda: cell(row, COL.ODA),
     iletisim: cell(row, COL.ILETISIM) ? String(cell(row, COL.ILETISIM)) : null,

@@ -93,6 +93,18 @@ export default function BiletMobileList({
               <span className="text-dim">Satış</span>
               <div className="font-data font-semibold">{fmtTL(b.satis_fiyati)}</div>
             </div>
+            <div>
+              <span className="text-dim">Alış</span>
+              <div className="font-data">{fmtTL(b.alis_fiyati)}</div>
+            </div>
+            <div>
+              <span className="text-dim">To Pay</span>
+              <div className="font-data text-accent">{fmtTL(b.teknede_odeme)}</div>
+            </div>
+            <div>
+              <span className="text-dim">Komisyon</span>
+              <div className="font-data text-komisyon">{fmtTL(b.komisyon)}</div>
+            </div>
           </div>
 
           {(canEdit || canDelete) && (
@@ -137,6 +149,10 @@ export default function BiletMobileList({
             <div>
               <span className="text-dim">Alış</span>
               <div className="font-data font-semibold">{fmtTL(totals.alis_fiyati)}</div>
+            </div>
+            <div>
+              <span className="text-dim">To Pay</span>
+              <div className="font-data font-semibold text-accent">{fmtTL(totals.teknede_odeme)}</div>
             </div>
             <div>
               <span className="text-dim">Komisyon</span>

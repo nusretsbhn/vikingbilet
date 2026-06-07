@@ -3,7 +3,7 @@ import Modal from '../ui/Modal';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import AcentaCombobox from './AcentaCombobox';
-import { toInputDate } from '../../utils/format';
+import { toInputDate, calcKomisyon, parseOptionalPrice, parseMoneyDefaultZero } from '../../utils/format';
 
 const EMPTY = {
   tur_tarihi: '',
@@ -13,9 +13,9 @@ const EMPTY = {
   buyuk_kisi: 0,
   kucuk_kisi: 0,
   free_kisi: 0,
-  satis_fiyati: 0,
-  alis_fiyati: 0,
-  teknede_odeme: 0,
+  satis_fiyati: '',
+  alis_fiyati: '',
+  teknede_odeme: '',
   isim: '',
   iletisim: '',
   otel: '',
@@ -33,6 +33,9 @@ export default function BiletForm({ open, bilet, loading, onClose, onSave }) {
         ...EMPTY,
         ...bilet,
         tur_tarihi: toInputDate(bilet.tur_tarihi),
+        satis_fiyati: bilet.satis_fiyati ?? '',
+        alis_fiyati: bilet.alis_fiyati ?? '',
+        teknede_odeme: bilet.teknede_odeme ?? '',
       });
     } else {
       setForm({ ...EMPTY, tur_tarihi: new Date().toISOString().slice(0, 10) });
@@ -43,7 +46,7 @@ export default function BiletForm({ open, bilet, loading, onClose, onSave }) {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const komisyon = (parseFloat(form.satis_fiyati) || 0) - (parseFloat(form.alis_fiyati) || 0);
+  const komisyon = calcKomisyon(form.satis_fiyati, form.alis_fiyati);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -52,9 +55,9 @@ export default function BiletForm({ open, bilet, loading, onClose, onSave }) {
       buyuk_kisi: parseInt(form.buyuk_kisi, 10) || 0,
       kucuk_kisi: parseInt(form.kucuk_kisi, 10) || 0,
       free_kisi: parseInt(form.free_kisi, 10) || 0,
-      satis_fiyati: parseFloat(form.satis_fiyati) || 0,
-      alis_fiyati: parseFloat(form.alis_fiyati) || 0,
-      teknede_odeme: parseFloat(form.teknede_odeme) || 0,
+      satis_fiyati: parseOptionalPrice(form.satis_fiyati),
+      alis_fiyati: parseOptionalPrice(form.alis_fiyati),
+      teknede_odeme: parseMoneyDefaultZero(form.teknede_odeme),
     });
   };
 
@@ -94,13 +97,13 @@ export default function BiletForm({ open, bilet, loading, onClose, onSave }) {
         </Section>
 
         <Section title="Fiyatlar">
-          <Input label="Satış Fiyatı ₺" type="number" step="0.01" value={form.satis_fiyati} onChange={(e) => handleChange('satis_fiyati', e.target.value)} />
-          <Input label="Alış Fiyatı ₺" type="number" step="0.01" value={form.alis_fiyati} onChange={(e) => handleChange('alis_fiyati', e.target.value)} />
-          <Input label="Teknede Ödeme ₺" type="number" step="0.01" value={form.teknede_odeme} onChange={(e) => handleChange('teknede_odeme', e.target.value)} />
+          <Input label="Satış Fiyatı ₺" type="number" step="0.01" value={form.satis_fiyati ?? ''} onChange={(e) => handleChange('satis_fiyati', e.target.value)} />
+          <Input label="Alış Fiyatı ₺" type="number" step="0.01" value={form.alis_fiyati ?? ''} onChange={(e) => handleChange('alis_fiyati', e.target.value)} />
+          <Input label="To Pay ₺" type="number" step="0.01" value={form.teknede_odeme ?? ''} onChange={(e) => handleChange('teknede_odeme', e.target.value)} />
           <div className="flex flex-col gap-1">
             <label className="text-xs text-secondary font-medium">Komisyon (otomatik)</label>
             <div className="h-[30px] px-2.5 flex items-center rounded border border-border bg-row-alt text-komisyon font-data text-sm">
-              {komisyon.toFixed(2)} ₺
+              {komisyon === null ? '—' : `${komisyon.toFixed(2)} ₺`}
             </div>
           </div>
         </Section>

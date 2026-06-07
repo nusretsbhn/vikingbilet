@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import AcentaCombobox from './AcentaCombobox';
+import { calcKomisyon, parseOptionalPrice, parseMoneyDefaultZero } from '../../utils/format';
 import {
   getNavigableColumns,
   handleEntryGridKeyDown,
@@ -14,6 +15,7 @@ const EMPTY = () => ({
   free_kisi: '',
   satis_fiyati: '',
   alis_fiyati: '',
+  teknede_odeme: '',
   otel: '',
   isim: '',
   gelen_yer: '',
@@ -54,8 +56,9 @@ export default function QuickEntryRow({ columns, onSave, saving }) {
       buyuk_kisi: parseInt(form.buyuk_kisi, 10) || 0,
       kucuk_kisi: parseInt(form.kucuk_kisi, 10) || 0,
       free_kisi: parseInt(form.free_kisi, 10) || 0,
-      satis_fiyati: parseFloat(form.satis_fiyati) || 0,
-      alis_fiyati: parseFloat(form.alis_fiyati) || 0,
+      satis_fiyati: parseOptionalPrice(form.satis_fiyati),
+      alis_fiyati: parseOptionalPrice(form.alis_fiyati),
+      teknede_odeme: parseMoneyDefaultZero(form.teknede_odeme),
       otel: form.otel || null,
       isim: form.isim || null,
       gelen_yer: form.gelen_yer || null,
@@ -80,9 +83,7 @@ export default function QuickEntryRow({ columns, onSave, saving }) {
     });
   };
 
-  const satis = parseFloat(form.satis_fiyati) || 0;
-  const alis = parseFloat(form.alis_fiyati) || 0;
-  const komisyon = satis - alis;
+  const komisyon = calcKomisyon(form.satis_fiyati, form.alis_fiyati);
 
   const renderCell = (colId) => {
     switch (colId) {
@@ -178,10 +179,24 @@ export default function QuickEntryRow({ columns, onSave, saving }) {
             {...gridCellProps(0, 'alis_fiyati')}
           />
         );
+      case 'teknede_odeme':
+        return (
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.teknede_odeme}
+            onChange={(e) => handleChange('teknede_odeme', e.target.value)}
+            onKeyDown={onKeyDown('teknede_odeme')}
+            className={`${inputClass} text-right font-data`}
+            placeholder="0"
+            {...gridCellProps(0, 'teknede_odeme')}
+          />
+        );
       case 'komisyon':
         return (
           <span className="number-cell text-komisyon text-xs block px-1">
-            {satis || alis ? komisyon.toFixed(2) : '—'}
+            {komisyon === null ? '—' : komisyon.toFixed(2)}
           </span>
         );
       case 'otel':

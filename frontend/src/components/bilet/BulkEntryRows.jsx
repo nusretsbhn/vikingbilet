@@ -7,6 +7,7 @@ import {
   focusEntryCell,
   gridCellProps,
 } from './entryGridNav';
+import { calcKomisyon, parseOptionalPrice, parseMoneyDefaultZero } from '../../utils/format';
 
 export const ENTRY_INPUT_CLASS =
   'h-7 w-full min-w-0 px-1.5 text-xs border border-accent/40 rounded bg-white text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30';
@@ -35,6 +36,7 @@ function createEmptyRow() {
     free_kisi: '',
     satis_fiyati: '',
     alis_fiyati: '',
+    teknede_odeme: '',
     otel: '',
     isim: '',
     gelen_yer: '',
@@ -55,6 +57,7 @@ function rowHasData(row) {
     row.free_kisi !== '' ||
     row.satis_fiyati !== '' ||
     row.alis_fiyati !== '' ||
+    row.teknede_odeme !== '' ||
     row.otel ||
     row.isim ||
     row.gelen_yer ||
@@ -85,8 +88,9 @@ function rowToPayload(row) {
     buyuk_kisi: parseInt(row.buyuk_kisi, 10) || 0,
     kucuk_kisi: parseInt(row.kucuk_kisi, 10) || 0,
     free_kisi: parseInt(row.free_kisi, 10) || 0,
-    satis_fiyati: parseFloat(row.satis_fiyati) || 0,
-    alis_fiyati: parseFloat(row.alis_fiyati) || 0,
+    satis_fiyati: parseOptionalPrice(row.satis_fiyati),
+    alis_fiyati: parseOptionalPrice(row.alis_fiyati),
+    teknede_odeme: parseMoneyDefaultZero(row.teknede_odeme),
     otel: row.otel || null,
     isim: row.isim || null,
     gelen_yer: row.gelen_yer || null,
@@ -194,13 +198,25 @@ function EntryCell({ colId, row, rowIndex, onChange, onCellKeyDown }) {
           {...keyProps}
         />
       );
+    case 'teknede_odeme':
+      return (
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          value={row.teknede_odeme}
+          onChange={(e) => handle('teknede_odeme', e.target.value)}
+          className={`${inputClass} text-right font-data`}
+          placeholder="0"
+          {...gridCellProps(rowIndex, 'teknede_odeme')}
+          {...keyProps}
+        />
+      );
     case 'komisyon': {
-      const satis = parseFloat(row.satis_fiyati) || 0;
-      const alis = parseFloat(row.alis_fiyati) || 0;
-      const komisyon = satis - alis;
+      const komisyon = calcKomisyon(row.satis_fiyati, row.alis_fiyati);
       return (
         <span className="number-cell text-komisyon text-xs block px-1">
-          {satis || alis ? komisyon.toFixed(2) : '—'}
+          {komisyon === null ? '—' : komisyon.toFixed(2)}
         </span>
       );
     }

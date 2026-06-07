@@ -6,6 +6,7 @@ export const NAVIGABLE_COLS = [
   'free_kisi',
   'satis_fiyati',
   'alis_fiyati',
+  'teknede_odeme',
   'otel',
   'isim',
   'gelen_yer',

@@ -21,10 +21,15 @@ CREATE TABLE IF NOT EXISTS biletler (
   buyuk_kisi      INTEGER     DEFAULT 0,
   kucuk_kisi      INTEGER     DEFAULT 0,
   free_kisi       INTEGER     DEFAULT 0,
-  satis_fiyati    NUMERIC(12,2) DEFAULT 0,
-  alis_fiyati     NUMERIC(12,2) DEFAULT 0,
+  satis_fiyati    NUMERIC(12,2),
+  alis_fiyati     NUMERIC(12,2),
   teknede_odeme   NUMERIC(12,2) DEFAULT 0,
-  komisyon        NUMERIC(12,2) GENERATED ALWAYS AS (satis_fiyati - alis_fiyati) STORED,
+  komisyon        NUMERIC(12,2) GENERATED ALWAYS AS (
+    CASE
+      WHEN satis_fiyati IS NULL THEN NULL
+      ELSE satis_fiyati - COALESCE(alis_fiyati, 0)
+    END
+  ) STORED,
   otel            VARCHAR(200),
   oda             VARCHAR(100),
   isim            VARCHAR(300),

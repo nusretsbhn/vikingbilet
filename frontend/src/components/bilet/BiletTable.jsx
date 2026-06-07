@@ -5,7 +5,7 @@ import {
   getCoreRowModel,
   flexRender,
 } from '@tanstack/react-table';
-import { fmtTL, fmtDate, fmtNum } from '../../utils/format';
+import { fmtTL, fmtDate, fmtNum, parseOptionalPrice, parseMoneyDefaultZero } from '../../utils/format';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import BulkEntryRows from './BulkEntryRows';
@@ -27,8 +27,9 @@ const EDITABLE_FIELDS = {
   buyuk_kisi: { type: 'number' },
   kucuk_kisi: { type: 'number' },
   free_kisi: { type: 'number' },
-  satis_fiyati: { type: 'number' },
-  alis_fiyati: { type: 'number' },
+  satis_fiyati: { type: 'number', optional: true },
+  alis_fiyati: { type: 'number', optional: true },
+  teknede_odeme: { type: 'number' },
   otel: { type: 'text' },
   isim: { type: 'text' },
   gelen_yer: { type: 'text' },
@@ -65,7 +66,7 @@ function EditableCell({ row, columnId, value, canEdit, editingCell, editValue, s
   );
 }
 
-const sortable = ['tur_tarihi', 'bilet_no', 'buyuk_kisi', 'kucuk_kisi', 'satis_fiyati', 'alis_fiyati', 'komisyon'];
+const sortable = ['tur_tarihi', 'bilet_no', 'buyuk_kisi', 'kucuk_kisi', 'satis_fiyati', 'alis_fiyati', 'teknede_odeme', 'komisyon'];
 
 function renderTotalCell(colId, totals) {
   switch (colId) {
@@ -81,6 +82,8 @@ function renderTotalCell(colId, totals) {
       return <span className="number-cell font-semibold">{fmtTL(totals.satis_fiyati)}</span>;
     case 'alis_fiyati':
       return <span className="number-cell font-semibold">{fmtTL(totals.alis_fiyati)}</span>;
+    case 'teknede_odeme':
+      return <span className="number-cell font-semibold text-accent">{fmtTL(totals.teknede_odeme)}</span>;
     case 'komisyon':
       return <span className="number-cell font-semibold text-komisyon">{fmtTL(totals.komisyon)}</span>;
     default:
@@ -118,6 +121,8 @@ export default function BiletTable({
     setEditingCell({ rowId, columnId });
     if (columnId === 'tur_tarihi') {
       setEditValue(value?.slice?.(0, 10) || value || '');
+    } else if (value === null || value === undefined) {
+      setEditValue('');
     } else {
       setEditValue(value ?? '');
     }
@@ -133,9 +138,16 @@ export default function BiletTable({
     const { columnId } = editingCell;
     let val = editValue;
     if (EDITABLE_FIELDS[columnId]?.type === 'number') {
-      val = columnId.includes('kisi')
-        ? parseInt(editValue, 10) || 0
-        : parseFloat(editValue) || 0;
+      if (EDITABLE_FIELDS[columnId]?.optional) {
+        val = editValue === '' ? null : parseFloat(editValue);
+        if (editValue !== '' && Number.isNaN(val)) val = null;
+      } else if (columnId === 'teknede_odeme') {
+        val = parseMoneyDefaultZero(editValue);
+      } else if (columnId.includes('kisi')) {
+        val = parseInt(editValue, 10) || 0;
+      } else {
+        val = parseFloat(editValue) || 0;
+      }
     }
     try {
       await onInlineSave(row.id, { [columnId]: val });
@@ -203,26 +215,36 @@ export default function BiletTable({
     },
     {
       id: 'satis_fiyati',
-      header: 'Satış (₺)',
+      header: 'Satış Fiyatı (₺)',
       accessorKey: 'satis_fiyati',
-      size: 100,
+      size: 110,
       cell: ({ row, getValue }) =>
         renderEditable(row, 'satis_fiyati', fmtTL(getValue()), getValue()),
     },
     {
       id: 'alis_fiyati',
-      header: 'Alış (₺)',
+      header: 'Alış Fiyatı (₺)',
       accessorKey: 'alis_fiyati',
-      size: 100,
+      size: 110,
       cell: ({ row, getValue }) =>
         renderEditable(row, 'alis_fiyati', fmtTL(getValue()), getValue()),
+    },
+    {
+      id: 'teknede_odeme',
+      header: 'To Pay (₺)',
+      accessorKey: 'teknede_odeme',
+      size: 100,
+      cell: ({ row, getValue }) =>
+        renderEditable(row, 'teknede_odeme', fmtTL(getValue()), getValue()),
     },
     {
       id: 'komisyon',
       header: 'Komisyon (₺)',
       accessorKey: 'komisyon',
       size: 110,
-      cell: ({ getValue }) => <span className="number-cell text-komisyon">{fmtTL(getValue())}</span>,
+      cell: ({ getValue }) => (
+        <span className="number-cell text-komisyon">{fmtTL(getValue())}</span>
+      ),
     },
     {
       id: 'otel',
@@ -336,7 +358,7 @@ export default function BiletTable({
         )}
         {canEdit && bulkMode && onBulkCreate && (
           <div className="overflow-x-auto -mx-px">
-            <table className="data-table w-full min-w-[1280px]">
+            <table className="data-table w-full min-w-[1380px]">
               <thead>
                 {table.getHeaderGroups().map((hg) => (
                   <tr key={hg.id}>

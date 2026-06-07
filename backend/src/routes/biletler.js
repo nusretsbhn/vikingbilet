@@ -5,6 +5,7 @@ const pool = require('../db/pool');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 const { parseVikingBuffer } = require('../utils/excelImport');
+const { normalizeBiletPrices } = require('../utils/fiyat');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -16,6 +17,7 @@ const SORTABLE_COLUMNS = {
   kucuk_kisi: 'kucuk_kisi',
   satis_fiyati: 'satis_fiyati',
   alis_fiyati: 'alis_fiyati',
+  teknede_odeme: 'teknede_odeme',
   komisyon: 'komisyon',
   gelen_yer: 'gelen_yer',
   durum: 'durum',
@@ -115,6 +117,7 @@ router.get('/', async (req, res) => {
          COALESCE(SUM(free_kisi), 0)::int AS free_kisi,
          COALESCE(SUM(satis_fiyati), 0)::float AS satis_fiyati,
          COALESCE(SUM(alis_fiyati), 0)::float AS alis_fiyati,
+         COALESCE(SUM(teknede_odeme), 0)::float AS teknede_odeme,
          COALESCE(SUM(komisyon), 0)::float AS komisyon
        FROM biletler ${whereClause}`,
       values
@@ -164,8 +167,9 @@ router.get('/export', async (req, res) => {
       'Büyük': r.buyuk_kisi,
       'Küçük': r.kucuk_kisi,
       'Free': r.free_kisi,
-      'Satış (₺)': r.satis_fiyati,
-      'Alış (₺)': r.alis_fiyati,
+      'Satış Fiyatı (₺)': r.satis_fiyati,
+      'Alış Fiyatı (₺)': r.alis_fiyati,
+      'To Pay (₺)': r.teknede_odeme,
       'Komisyon (₺)': r.komisyon,
       'Otel': r.otel,
       'Oda': r.oda,
@@ -235,7 +239,7 @@ function buildInsertPayload(data, userId) {
 }
 
 router.post('/', requireRole('editor'), async (req, res) => {
-  const data = req.body;
+  const data = normalizeBiletPrices(req.body);
 
   if (!data.tur_tarihi) {
     return res.status(400).json({ error: 'Tur tarihi zorunludur' });
@@ -274,7 +278,8 @@ router.post('/bulk', requireRole('editor'), async (req, res) => {
     await client.query('BEGIN');
     const created = [];
 
-    for (const data of valid) {
+    for (const item of valid) {
+      const data = normalizeBiletPrices(item);
       const { sql, values } = buildInsertPayload(data, req.user.id);
       const { rows } = await client.query(sql, values);
       created.push(rows[0]);
@@ -297,7 +302,7 @@ router.put('/:id', requireRole('editor'), async (req, res) => {
     return res.status(400).json({ error: 'Geçersiz bilet ID' });
   }
 
-  const data = req.body;
+  const data = normalizeBiletPrices(req.body);
   const fields = [];
   const values = [];
   let idx = 1;
