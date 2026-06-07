@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import {
   useReactTable,
   getCoreRowModel,
@@ -86,6 +87,7 @@ export default function BiletTable({
   const [editValue, setEditValue] = useState('');
   const [columnVisibility, setColumnVisibility] = useState(DEFAULT_VISIBILITY);
   const [columnMenuOpen, setColumnMenuOpen] = useState(false);
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
 
   const startInlineEdit = (rowId, columnId, value) => {
     if (!canEdit || !EDITABLE_FIELDS[columnId]) return;
@@ -312,7 +314,7 @@ export default function BiletTable({
   return (
     <div className="bg-surface border border-border rounded-lg overflow-hidden">
       {/* Mobil görünüm */}
-      <div className="lg:hidden">
+      <div className="lg:hidden" {...(isDesktop ? { inert: '' } : {})}>
         {canEdit && bulkMode && (
           <div className="px-3 py-2 bg-amber/10 border-b border-amber/30 text-xs text-amber">
             Toplu giriş mobilde yatay kaydırmalı tabloda açılır. Daha rahat kullanım için cihazı yatay çevirebilirsiniz.
@@ -361,7 +363,7 @@ export default function BiletTable({
       </div>
 
       {/* Masaüstü görünüm */}
-      <div className="hidden lg:block">
+      <div className="hidden lg:block" {...(!isDesktop ? { inert: '' } : {})}>
       <div className="flex justify-end px-3 py-2 border-b border-border relative">
         <Button size="sm" variant="ghost" onClick={() => setColumnMenuOpen(!columnMenuOpen)}>
           Sütunlar ▾
