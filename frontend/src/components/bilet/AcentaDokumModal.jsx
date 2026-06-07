@@ -3,6 +3,7 @@ import Modal from '../ui/Modal';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import AcentaCombobox from './AcentaCombobox';
+import DurumMultiSelect from './DurumMultiSelect';
 
 export default function AcentaDokumModal({ open, onClose, onDownload, loading, initialAcenta = '' }) {
   const today = new Date();
@@ -13,6 +14,7 @@ export default function AcentaDokumModal({ open, onClose, onDownload, loading, i
     acenta_adi: initialAcenta,
     tarih_baslangic: firstDay,
     tarih_bitis: lastDay,
+    durumlar: [],
   });
 
   useEffect(() => {
@@ -21,6 +23,7 @@ export default function AcentaDokumModal({ open, onClose, onDownload, loading, i
         acenta_adi: initialAcenta,
         tarih_baslangic: firstDay,
         tarih_bitis: lastDay,
+        durumlar: [],
       });
     }
   }, [open, initialAcenta, firstDay, lastDay]);
@@ -51,7 +54,7 @@ export default function AcentaDokumModal({ open, onClose, onDownload, loading, i
     >
       <div className="space-y-3">
         <p className="text-xs text-secondary">
-          Seçilen acenta ve tarih aralığındaki biletler, tahsilatlar ve özet tutarlar PDF olarak indirilir.
+          Seçilen acenta, tarih aralığı ve durumlara göre biletler, tahsilatlar ve özet tutarlar PDF olarak indirilir.
         </p>
         <div className="flex flex-col gap-1">
           <label className="text-xs text-secondary font-medium">Acenta *</label>
@@ -75,6 +78,10 @@ export default function AcentaDokumModal({ open, onClose, onDownload, loading, i
             onChange={(e) => setForm({ ...form, tarih_bitis: e.target.value })}
           />
         </div>
+        <DurumMultiSelect
+          value={form.durumlar}
+          onChange={(durumlar) => setForm({ ...form, durumlar })}
+        />
       </div>
     </Modal>
   );

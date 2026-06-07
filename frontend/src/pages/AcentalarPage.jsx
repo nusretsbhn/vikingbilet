@@ -76,10 +76,18 @@ export default function AcentalarPage() {
     setModalOpen(true);
   };
 
-  const handleDokumDownload = async ({ acenta_adi, tarih_baslangic, tarih_bitis }) => {
+  const handleDokumDownload = async ({ acenta_adi, tarih_baslangic, tarih_bitis, durumlar = [] }) => {
     setDokumLoading(true);
     try {
-      const blob = await downloadAcentaDokum({ acenta: acenta_adi, tarih_baslangic, tarih_bitis });
+      const params = {
+        acenta: acenta_adi,
+        tarih_baslangic,
+        tarih_bitis,
+      };
+      if (durumlar.length > 0) {
+        params.durumlar = durumlar.join(',');
+      }
+      const blob = await downloadAcentaDokum(params);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

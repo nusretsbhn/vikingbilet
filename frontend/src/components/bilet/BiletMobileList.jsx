@@ -1,6 +1,7 @@
 import { fmtTL, fmtDate, fmtNum } from '../../utils/format';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
+import DurumSelect from './DurumSelect';
 
 export default function BiletMobileList({
   data,
@@ -10,6 +11,7 @@ export default function BiletMobileList({
   canDelete,
   onEdit,
   onDelete,
+  onInlineSave,
   filters,
   onFilter,
   sortable,
@@ -57,7 +59,18 @@ export default function BiletMobileList({
                 {b.bilet_no ? ` · ${b.bilet_no}` : ''}
               </div>
             </div>
-            {b.durum && <Badge>{b.durum}</Badge>}
+            {b.durum && !canEdit && <Badge>{b.durum}</Badge>}
+            {canEdit && (
+              <DurumSelect
+                value={b.durum || ''}
+                className="max-w-[140px]"
+                onChange={(durum) => {
+                  const next = durum || null;
+                  if ((b.durum || null) === next) return;
+                  onInlineSave?.(b.id, { durum: next });
+                }}
+              />
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs mb-2">

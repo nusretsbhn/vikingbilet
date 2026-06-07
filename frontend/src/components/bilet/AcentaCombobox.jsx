@@ -59,6 +59,7 @@ export default function AcentaCombobox({
   placeholder = 'Acenta',
   inputRef,
   compact = false,
+  showNewHint = true,
   gridCellProps: gridCellPropsAttr = {},
 }) {
   const [open, setOpen] = useState(false);
@@ -90,7 +91,7 @@ export default function AcentaCombobox({
     return acentalar.filter((a) => a.toLowerCase().includes(q));
   }, [acentalar, value]);
 
-  const isNew =
+  const isNew = showNewHint &&
     value.trim().length > 0 &&
     !acentalar.some((a) => a.toLowerCase() === value.trim().toLowerCase());
 

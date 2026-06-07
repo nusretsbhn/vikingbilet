@@ -3,6 +3,7 @@ import Button from '../ui/Button';
 import Input from '../ui/Input';
 import BiletImport from './BiletImport';
 import MultiDatePicker from './MultiDatePicker';
+import AcentaCombobox from './AcentaCombobox';
 
 const DURUM_OPTIONS = ['', 'Tahsil edildi', 'Görülmedi', 'Misafir'];
 
@@ -58,13 +59,15 @@ export default function BiletFilters({
         onChange={(value) => handleChange('tur_tarihleri', value)}
         className="w-full sm:w-44"
       />
-      <Input
-        label="Acenta Ara"
-        placeholder="Acenta..."
-        value={local.gelen_yer}
-        onChange={(e) => handleChange('gelen_yer', e.target.value)}
-        className="w-full sm:w-36"
-      />
+      <div className="flex flex-col gap-1 w-full sm:w-44">
+        <label className="text-xs text-secondary font-medium">Acenta Ara</label>
+        <AcentaCombobox
+          value={local.gelen_yer}
+          onChange={(v) => handleChange('gelen_yer', v)}
+          placeholder="Acenta yazın veya seçin..."
+          showNewHint={false}
+        />
+      </div>
       <Input
         label="İsim Ara"
         placeholder="İsim..."

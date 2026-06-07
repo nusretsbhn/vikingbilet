@@ -11,6 +11,7 @@ import Button from '../ui/Button';
 import BulkEntryRows from './BulkEntryRows';
 import QuickEntryRow from './QuickEntryRow';
 import BiletMobileList from './BiletMobileList';
+import DurumSelect from './DurumSelect';
 
 const DEFAULT_VISIBILITY = {
   otel: true,
@@ -31,7 +32,6 @@ const EDITABLE_FIELDS = {
   otel: { type: 'text' },
   isim: { type: 'text' },
   gelen_yer: { type: 'text' },
-  durum: { type: 'text' },
 };
 
 function EditableCell({ row, columnId, value, canEdit, editingCell, editValue, setEditValue, startInlineEdit, saveInlineEdit, cancelInlineEdit, fieldType }) {
@@ -258,29 +258,19 @@ export default function BiletTable({
       size: 130,
       minSize: 100,
       cell: ({ row, getValue }) => {
-        const isEditing = editingCell?.rowId === row.id && editingCell?.columnId === 'durum';
-        if (isEditing) {
-          return (
-            <input
-              autoFocus
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              onBlur={() => saveInlineEdit(row.original)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') saveInlineEdit(row.original);
-                if (e.key === 'Escape') cancelInlineEdit();
-              }}
-              className="h-6 px-1 bg-white border border-border-focus rounded text-xs w-full"
-            />
-          );
+        const current = getValue() || '';
+        if (!canEdit) {
+          return <Badge>{current || '—'}</Badge>;
         }
         return (
-          <span
-            onDoubleClick={() => canEdit && startInlineEdit(row.id, 'durum', getValue())}
-            className={canEdit ? 'cursor-pointer' : ''}
-          >
-            <Badge>{getValue()}</Badge>
-          </span>
+          <DurumSelect
+            value={current}
+            onChange={(durum) => {
+              const next = durum || null;
+              if ((row.original.durum || null) === next) return;
+              onInlineSave(row.original.id, { durum: next });
+            }}
+          />
         );
       },
     },
@@ -300,7 +290,7 @@ export default function BiletTable({
         </div>
       ),
     },
-  ], [canEdit, canDelete, editingCell, editValue, onEdit, onDelete]);
+  ], [canEdit, canDelete, editingCell, editValue, onEdit, onDelete, onInlineSave]);
 
   const table = useReactTable({
     data: data || [],
@@ -379,6 +369,7 @@ export default function BiletTable({
             canDelete={canDelete}
             onEdit={onEdit}
             onDelete={onDelete}
+            onInlineSave={onInlineSave}
             filters={filters}
             onFilter={onFilter}
             sortable={sortable}

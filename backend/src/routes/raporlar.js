@@ -102,7 +102,7 @@ router.get('/acentalar', async (req, res) => {
 });
 
 router.get('/acenta-dokum', async (req, res) => {
-  const { acenta, tarih_baslangic, tarih_bitis } = req.query;
+  const { acenta, tarih_baslangic, tarih_bitis, durumlar } = req.query;
 
   if (!acenta || !tarih_baslangic || !tarih_bitis) {
     return res.status(400).json({ error: 'Acenta adı, tarih başlangıç ve tarih bitiş zorunludur' });
@@ -110,16 +110,43 @@ router.get('/acenta-dokum', async (req, res) => {
 
   try {
     const acentaFilter = acenta.trim();
+    const values = [acentaFilter, tarih_baslangic, tarih_bitis];
+    let durumClause = '';
+    let durumFilterLabel = null;
+
+    if (durumlar) {
+      const parts = durumlar.split(',').map((d) => d.trim()).filter(Boolean);
+      const statuses = parts.filter((p) => p !== '__bos__');
+      const includeEmpty = parts.includes('__bos__');
+      const durumParts = [];
+
+      if (statuses.length > 0) {
+        durumParts.push(`durum = ANY($${values.length + 1}::text[])`);
+        values.push(statuses);
+      }
+      if (includeEmpty) {
+        durumParts.push(`(durum IS NULL OR durum = '')`);
+      }
+      if (durumParts.length > 0) {
+        durumClause = ` AND (${durumParts.join(' OR ')})`;
+        durumFilterLabel = [
+          ...statuses,
+          ...(includeEmpty ? ['Belirtilmemiş'] : []),
+        ];
+      }
+    }
+
+    const biletWhere = `WHERE gelen_yer ILIKE $1
+         AND tur_tarihi >= $2
+         AND tur_tarihi <= $3${durumClause}`;
 
     const biletResult = await pool.query(
       `SELECT tur_tarihi, bilet_no, buyuk_kisi, kucuk_kisi, free_kisi,
               satis_fiyati, teknede_odeme, isim, durum, otel
        FROM biletler
-       WHERE gelen_yer ILIKE $1
-         AND tur_tarihi >= $2
-         AND tur_tarihi <= $3
+       ${biletWhere}
        ORDER BY tur_tarihi ASC, id ASC`,
-      [acentaFilter, tarih_baslangic, tarih_bitis]
+      values
     );
 
     const tahsilatResult = await pool.query(
@@ -139,10 +166,8 @@ router.get('/acenta-dokum', async (req, res) => {
         COALESCE(SUM(satis_fiyati), 0)::numeric AS toplam_satis,
         COALESCE(SUM(teknede_odeme), 0)::numeric AS to_pay_odeme
        FROM biletler
-       WHERE gelen_yer ILIKE $1
-         AND tur_tarihi >= $2
-         AND tur_tarihi <= $3`,
-      [acentaFilter, tarih_baslangic, tarih_bitis]
+       ${biletWhere}`,
+      values
     );
 
     const tahsilatToplam = tahsilatResult.rows.reduce(
@@ -161,6 +186,7 @@ router.get('/acenta-dokum', async (req, res) => {
       acenta_adi: acentaFilter,
       tarih_baslangic,
       tarih_bitis,
+      durum_filter: durumFilterLabel,
       biletler: biletResult.rows,
       tahsilatlar: tahsilatResult.rows,
       ozet: {

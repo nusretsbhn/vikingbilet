@@ -240,6 +240,7 @@ function generateAcentaDokumPdf(data) {
     acenta_adi,
     tarih_baslangic,
     tarih_bitis,
+    durum_filter,
     biletler,
     tahsilatlar,
     ozet,
@@ -268,7 +269,15 @@ function generateAcentaDokumPdf(data) {
     layout.textLine('Viking Ölüdeniz', { align: 'center', size: 15, bold: true, gapAfter: 18 });
     layout.textLine(acenta_adi, { align: 'center', size: 13, bold: true, gapAfter: 16 });
     layout.textLine('HİZMET DÖKÜMÜ', { align: 'center', size: 11, bold: true, gapAfter: 14 });
-    layout.textLine(fmtDateRange(tarih_baslangic, tarih_bitis), { align: 'center', size: 10, gapAfter: 12 });
+    layout.textLine(fmtDateRange(tarih_baslangic, tarih_bitis), { align: 'center', size: 10, gapAfter: durum_filter?.length ? 6 : 12 });
+    if (durum_filter?.length) {
+      layout.textLine(`Durum: ${durum_filter.join(', ')}`, {
+        align: 'center',
+        size: 9,
+        color: '#444444',
+        gapAfter: 12,
+      });
+    }
     layout.textLine(`Oluşturulma: ${new Date().toLocaleString('tr-TR')}`, {
       align: 'center',
       size: 8,
