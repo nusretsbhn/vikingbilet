@@ -4,6 +4,8 @@ import Button from '../ui/Button';
 
 export default function BiletMobileList({
   data,
+  totals,
+  filteredTotal,
   canEdit,
   canDelete,
   onEdit,
@@ -19,6 +21,8 @@ export default function BiletMobileList({
       <div className="text-center text-secondary py-10 text-sm">Kayıt bulunamadı</div>
     );
   }
+
+  const showTotals = filteredTotal > 0 && totals;
 
   return (
     <div className="divide-y divide-border">
@@ -94,6 +98,40 @@ export default function BiletMobileList({
           )}
         </article>
       ))}
+
+      {showTotals && (
+        <div className="p-3 bg-header border-t-2 border-accent/30 space-y-2">
+          <div className="text-xs font-semibold text-primary uppercase tracking-wide">
+            Toplam ({filteredTotal} kayıt)
+          </div>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs">
+            <div>
+              <span className="text-dim">Büyük</span>
+              <div className="font-data font-semibold">{fmtNum(totals.buyuk_kisi)}</div>
+            </div>
+            <div>
+              <span className="text-dim">Küçük</span>
+              <div className="font-data font-semibold">{fmtNum(totals.kucuk_kisi)}</div>
+            </div>
+            <div>
+              <span className="text-dim">Free</span>
+              <div className="font-data font-semibold">{fmtNum(totals.free_kisi)}</div>
+            </div>
+            <div>
+              <span className="text-dim">Satış</span>
+              <div className="font-data font-semibold">{fmtTL(totals.satis_fiyati)}</div>
+            </div>
+            <div>
+              <span className="text-dim">Alış</span>
+              <div className="font-data font-semibold">{fmtTL(totals.alis_fiyati)}</div>
+            </div>
+            <div>
+              <span className="text-dim">Komisyon</span>
+              <div className="font-data font-semibold text-komisyon">{fmtTL(totals.komisyon)}</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

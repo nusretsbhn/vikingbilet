@@ -141,6 +141,7 @@ export default function BiletlerPage() {
       ) : (
         <BiletTable
           data={data.data}
+          totals={data.totals}
           pagination={data.pagination}
           filters={filters}
           onFilter={updateFilters}

@@ -65,8 +65,32 @@ function EditableCell({ row, columnId, value, canEdit, editingCell, editValue, s
   );
 }
 
+const sortable = ['tur_tarihi', 'bilet_no', 'buyuk_kisi', 'kucuk_kisi', 'satis_fiyati', 'alis_fiyati', 'komisyon'];
+
+function renderTotalCell(colId, totals) {
+  switch (colId) {
+    case 'tur_tarihi':
+      return <span className="font-semibold text-xs text-primary">Toplam</span>;
+    case 'buyuk_kisi':
+      return <span className="number-cell font-semibold">{fmtNum(totals.buyuk_kisi)}</span>;
+    case 'kucuk_kisi':
+      return <span className="number-cell font-semibold">{fmtNum(totals.kucuk_kisi)}</span>;
+    case 'free_kisi':
+      return <span className="number-cell font-semibold">{fmtNum(totals.free_kisi)}</span>;
+    case 'satis_fiyati':
+      return <span className="number-cell font-semibold">{fmtTL(totals.satis_fiyati)}</span>;
+    case 'alis_fiyati':
+      return <span className="number-cell font-semibold">{fmtTL(totals.alis_fiyati)}</span>;
+    case 'komisyon':
+      return <span className="number-cell font-semibold text-komisyon">{fmtTL(totals.komisyon)}</span>;
+    default:
+      return null;
+  }
+}
+
 export default function BiletTable({
   data,
+  totals,
   pagination,
   filters,
   onFilter,
@@ -306,8 +330,8 @@ export default function BiletTable({
     return filters.sort_dir === 'asc' ? '↑' : '↓';
   };
 
-  const sortable = ['tur_tarihi', 'bilet_no', 'buyuk_kisi', 'kucuk_kisi', 'satis_fiyati', 'alis_fiyati', 'komisyon'];
   const { page, total, totalPages } = pagination;
+  const showTotals = total > 0 && totals;
 
   const toggleableColumns = table.getAllLeafColumns().filter((c) => c.id !== 'actions');
 
@@ -349,6 +373,8 @@ export default function BiletTable({
         {!bulkMode && (
           <BiletMobileList
             data={data}
+            totals={totals}
+            filteredTotal={total}
             canEdit={canEdit}
             canDelete={canDelete}
             onEdit={onEdit}
@@ -455,6 +481,21 @@ export default function BiletTable({
               </tr>
             )}
           </tbody>
+          {showTotals && (
+            <tfoot className="sticky bottom-0 z-10 bg-header border-t-2 border-accent/30 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]">
+              <tr>
+                {table.getVisibleLeafColumns().map((col) => (
+                  <td
+                    key={col.id}
+                    style={{ width: col.getSize(), minWidth: col.getSize() }}
+                    className="py-2 px-1.5 text-xs"
+                  >
+                    {renderTotalCell(col.id, totals)}
+                  </td>
+                ))}
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
       </div>

@@ -96,6 +96,18 @@ router.get('/', async (req, res) => {
     );
     const total = countResult.rows[0].total;
 
+    const totalsResult = await pool.query(
+      `SELECT
+         COALESCE(SUM(buyuk_kisi), 0)::int AS buyuk_kisi,
+         COALESCE(SUM(kucuk_kisi), 0)::int AS kucuk_kisi,
+         COALESCE(SUM(free_kisi), 0)::int AS free_kisi,
+         COALESCE(SUM(satis_fiyati), 0)::float AS satis_fiyati,
+         COALESCE(SUM(alis_fiyati), 0)::float AS alis_fiyati,
+         COALESCE(SUM(komisyon), 0)::float AS komisyon
+       FROM biletler ${whereClause}`,
+      values
+    );
+
     let dataQuery = `SELECT * FROM biletler ${whereClause} ORDER BY ${sortColumn} ${sortDirection}`;
     const dataValues = [...values];
 
@@ -108,6 +120,7 @@ router.get('/', async (req, res) => {
 
     res.json({
       data: rows,
+      totals: totalsResult.rows[0],
       pagination: {
         page: pageNum,
         limit: limitNum || total,
