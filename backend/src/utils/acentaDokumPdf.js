@@ -296,7 +296,7 @@ function generateAcentaDokumPdf(data) {
           { label: 'Büyük', width: 30, align: 'right' },
           { label: 'Küçük', width: 30, align: 'right' },
           { label: 'Free', width: 30, align: 'right' },
-          { label: 'Satış (TL)', width: 68, align: 'right' },
+          { label: 'Alış (TL)', width: 68, align: 'right' },
           { label: 'To Pay (TL)', width: 68, align: 'right' },
           { label: 'İsim' },
           { label: 'Durum', width: 72 },
@@ -321,7 +321,7 @@ function generateAcentaDokumPdf(data) {
             String(b.buyuk_kisi || 0),
             String(b.kucuk_kisi || 0),
             String(b.free_kisi || 0),
-            fmtNum(b.satis_fiyati),
+            fmtNum(b.alis_fiyati),
             fmtNum(b.teknede_odeme),
             b.isim || '—',
             b.durum || '—',
@@ -363,7 +363,7 @@ function generateAcentaDokumPdf(data) {
     layout.moveDown(8);
     layout.drawSummaryBox(
       [
-        ['Toplam Satış', fmtTL(ozet.toplam_satis)],
+        ['Toplam Alış (Borç)', fmtTL(ozet.toplam_alis)],
         ['To Pay Ödemeler', fmtTL(ozet.to_pay_odeme)],
         ['Bilet Hesap Tahsilat', fmtTL(ozet.bilet_hesap_tahsilat)],
         ['Toplam Tahsilat', fmtTL(ozet.toplam_tahsilat)],

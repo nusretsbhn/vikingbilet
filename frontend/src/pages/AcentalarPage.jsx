@@ -127,54 +127,17 @@ export default function AcentalarPage() {
         </div>
       </div>
 
-      {/* Mobil kart listesi */}
-      <div className="lg:hidden space-y-2">
-        {data.acentalar.map((a) => (
-          <button
-            key={a.acenta_adi}
-            type="button"
-            onClick={() => setSelected(a.acenta_adi)}
-            className={`mobile-card w-full text-left transition-colors ${
-              selected === a.acenta_adi ? 'ring-2 ring-accent/40 bg-accent/5' : ''
-            }`}
-          >
-            <div className="font-semibold text-sm mb-2">{a.acenta_adi}</div>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <span className="text-dim">Kişi</span>
-                <div className="font-data">{fmtNum(a.toplam_kisi)}</div>
-              </div>
-              <div>
-                <span className="text-dim">Satış</span>
-                <div className="font-data font-semibold">{fmtTL(a.toplam_satis)}</div>
-              </div>
-              <div>
-                <span className="text-dim">To Pay</span>
-                <div className="font-data text-accent">{fmtTL(a.to_pay_odeme)}</div>
-              </div>
-              <div>
-                <span className="text-dim">Kalan</span>
-                <div className={`font-data font-semibold ${parseFloat(a.kalan_alacak) > 0 ? 'text-red' : 'text-green'}`}>
-                  {fmtTL(a.kalan_alacak)}
-                </div>
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      {/* Masaüstü tablo */}
-      <div className="hidden lg:block bg-surface border border-border rounded-lg overflow-x-auto">
-        <table className="data-table w-full">
+      <div className="bg-surface border border-border rounded-lg overflow-x-auto -mx-px">
+        <table className="data-table w-full min-w-[720px]">
           <thead>
             <tr>
-              <th>Acenta Adı</th>
+              <th className="sticky left-0 z-10 bg-header min-w-[120px]">Acenta Adı</th>
               <th className="text-right">Büyük</th>
               <th className="text-right">Küçük</th>
               <th className="text-right">Toplam Kişi</th>
-              <th className="text-right">Toplam Satış</th>
-              <th className="text-right">To Pay Ödemeler</th>
-              <th className="text-right">Bilet Hesap Tahsilat</th>
+              <th className="text-right">Toplam Alış</th>
+              <th className="text-right">To Pay</th>
+              <th className="text-right">Bilet Hesap</th>
               <th className="text-right">Kalan Alacak</th>
             </tr>
           </thead>
@@ -185,11 +148,13 @@ export default function AcentalarPage() {
                 onClick={() => setSelected(a.acenta_adi)}
                 className={`cursor-pointer ${selected === a.acenta_adi ? 'bg-accent/10' : ''}`}
               >
-                <td className="font-medium">{a.acenta_adi}</td>
+                <td className={`font-medium sticky left-0 z-[1] min-w-[120px] ${selected === a.acenta_adi ? 'bg-accent/10' : 'bg-surface'}`}>
+                  {a.acenta_adi}
+                </td>
                 <td className="number-cell">{fmtNum(a.buyuk)}</td>
                 <td className="number-cell">{fmtNum(a.kucuk)}</td>
                 <td className="number-cell">{fmtNum(a.toplam_kisi)}</td>
-                <td className="number-cell">{fmtTL(a.toplam_satis)}</td>
+                <td className="number-cell font-semibold">{fmtTL(a.toplam_alis)}</td>
                 <td className="number-cell text-accent">{fmtTL(a.to_pay_odeme)}</td>
                 <td className="number-cell">{fmtTL(a.bilet_hesap_tahsilat)}</td>
                 <td className={`number-cell font-semibold ${parseFloat(a.kalan_alacak) > 0 ? 'text-red' : 'text-green'}`}>
@@ -208,9 +173,10 @@ export default function AcentalarPage() {
               <h3 className="text-sm font-semibold truncate">{selected} — Tahsilat Detayı</h3>
               {tahsilatData?.ozet && (
                 <p className="text-xs text-secondary mt-1">
+                  Alış: {fmtTL(tahsilatData.ozet.toplam_alis)} ·
                   To Pay: {fmtTL(tahsilatData.ozet.to_pay_toplam)} ·
                   Bilet Hesap: {fmtTL(tahsilatData.ozet.bilet_hesap_toplam)} ·
-                  Toplam: {fmtTL(tahsilatData.ozet.toplam_tahsilat)}
+                  Kalan: {fmtTL(tahsilatData.ozet.kalan_alacak)}
                 </p>
               )}
             </div>

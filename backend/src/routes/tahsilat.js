@@ -48,6 +48,7 @@ router.get('/', async (req, res) => {
 
     let toPayOdeme = [];
     let toPayToplam = 0;
+    let toplamAlis = 0;
 
     if (acenta) {
       const toPayResult = await pool.query(
@@ -59,17 +60,28 @@ router.get('/', async (req, res) => {
       );
       toPayOdeme = toPayResult.rows;
       toPayToplam = toPayOdeme.reduce((sum, r) => sum + parseFloat(r.tutar), 0);
+
+      const alisResult = await pool.query(
+        `SELECT COALESCE(SUM(alis_fiyati), 0)::numeric AS toplam_alis
+         FROM biletler
+         WHERE gelen_yer ILIKE $1`,
+        [`%${acenta}%`]
+      );
+      toplamAlis = parseFloat(alisResult.rows[0].toplam_alis);
     }
 
     const biletHesapToplam = rows.reduce((sum, r) => sum + parseFloat(r.tutar), 0);
+    const toplamTahsilat = toPayToplam + biletHesapToplam;
 
     res.json({
       tahsilatlar: rows,
       to_pay_odemeler: toPayOdeme,
       ozet: acenta ? {
+        toplam_alis: toplamAlis,
         to_pay_toplam: toPayToplam,
         bilet_hesap_toplam: biletHesapToplam,
-        toplam_tahsilat: toPayToplam + biletHesapToplam,
+        toplam_tahsilat: toplamTahsilat,
+        kalan_alacak: toplamAlis - toplamTahsilat,
       } : undefined,
     });
   } catch (err) {

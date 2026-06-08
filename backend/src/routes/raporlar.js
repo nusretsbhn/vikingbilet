@@ -75,11 +75,11 @@ router.get('/acentalar', async (req, res) => {
         COALESCE(SUM(b.buyuk_kisi), 0)::int AS buyuk,
         COALESCE(SUM(b.kucuk_kisi), 0)::int AS kucuk,
         COALESCE(SUM(b.buyuk_kisi + b.kucuk_kisi + b.free_kisi), 0)::int AS toplam_kisi,
-        COALESCE(SUM(b.satis_fiyati), 0)::numeric AS toplam_satis,
+        COALESCE(SUM(b.alis_fiyati), 0)::numeric AS toplam_alis,
         COALESCE(SUM(b.teknede_odeme), 0)::numeric AS to_pay_odeme,
         COALESCE(t.tahsilat, 0)::numeric AS bilet_hesap_tahsilat,
         (COALESCE(SUM(b.teknede_odeme), 0) + COALESCE(t.tahsilat, 0))::numeric AS toplam_tahsilat,
-        (COALESCE(SUM(b.satis_fiyati), 0)
+        (COALESCE(SUM(b.alis_fiyati), 0)
           - COALESCE(SUM(b.teknede_odeme), 0)
           - COALESCE(t.tahsilat, 0))::numeric AS kalan_alacak
       FROM biletler b
@@ -142,7 +142,7 @@ router.get('/acenta-dokum', async (req, res) => {
 
     const biletResult = await pool.query(
       `SELECT tur_tarihi, bilet_no, buyuk_kisi, kucuk_kisi, free_kisi,
-              satis_fiyati, teknede_odeme, isim, durum, otel
+              alis_fiyati, teknede_odeme, isim, durum, otel
        FROM biletler
        ${biletWhere}
        ORDER BY tur_tarihi ASC, id ASC`,
@@ -163,7 +163,7 @@ router.get('/acenta-dokum', async (req, res) => {
       `SELECT
         COUNT(*)::int AS bilet_sayisi,
         COALESCE(SUM(buyuk_kisi + kucuk_kisi + free_kisi), 0)::int AS toplam_kisi,
-        COALESCE(SUM(satis_fiyati), 0)::numeric AS toplam_satis,
+        COALESCE(SUM(alis_fiyati), 0)::numeric AS toplam_alis,
         COALESCE(SUM(teknede_odeme), 0)::numeric AS to_pay_odeme
        FROM biletler
        ${biletWhere}`,
@@ -176,11 +176,11 @@ router.get('/acenta-dokum', async (req, res) => {
     );
 
     const ozet = ozetResult.rows[0];
-    const toplamSatis = parseFloat(ozet.toplam_satis);
+    const toplamAlis = parseFloat(ozet.toplam_alis);
     const toPay = parseFloat(ozet.to_pay_odeme);
     const biletHesap = tahsilatToplam;
     const toplamTahsilat = toPay + biletHesap;
-    const kalanAlacak = toplamSatis - toplamTahsilat;
+    const kalanAlacak = toplamAlis - toplamTahsilat;
 
     const pdfBuffer = await generateAcentaDokumPdf({
       acenta_adi: acentaFilter,
@@ -192,7 +192,7 @@ router.get('/acenta-dokum', async (req, res) => {
       ozet: {
         bilet_sayisi: ozet.bilet_sayisi,
         toplam_kisi: ozet.toplam_kisi,
-        toplam_satis: toplamSatis,
+        toplam_alis: toplamAlis,
         to_pay_odeme: toPay,
         bilet_hesap_tahsilat: biletHesap,
         toplam_tahsilat: toplamTahsilat,
