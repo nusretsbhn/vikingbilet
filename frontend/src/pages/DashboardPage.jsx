@@ -89,7 +89,7 @@ export default function DashboardPage() {
                 <th>Bilet No</th>
                 <th>İsim</th>
                 <th>Acenta</th>
-                <th className="text-right">Satış</th>
+                <th className="text-right">Alış</th>
                 <th>Durum</th>
               </tr>
             </thead>
@@ -100,7 +100,7 @@ export default function DashboardPage() {
                   <td className="font-data">{b.bilet_no || '—'}</td>
                   <td>{b.isim || '—'}</td>
                   <td>{b.gelen_yer || '—'}</td>
-                  <td className="number-cell">{fmtTL(b.satis_fiyati)}</td>
+                  <td className="number-cell">{fmtTL(b.alis_fiyati)}</td>
                   <td><Badge>{b.durum}</Badge></td>
                 </tr>
               ))}

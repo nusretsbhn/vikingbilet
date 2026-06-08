@@ -13,7 +13,7 @@ router.get('/ozet', async (req, res) => {
       SELECT
         COUNT(*)::int AS toplam_bilet,
         COALESCE(SUM(buyuk_kisi + kucuk_kisi + free_kisi), 0)::int AS toplam_kisi,
-        COALESCE(SUM(satis_fiyati), 0)::numeric AS toplam_ciro,
+        COALESCE(SUM(alis_fiyati), 0)::numeric AS toplam_ciro,
         COALESCE(SUM(komisyon), 0)::numeric AS toplam_komisyon
       FROM biletler
     `);
@@ -28,7 +28,7 @@ router.get('/ozet', async (req, res) => {
     const aylikResult = await pool.query(`
       SELECT
         TO_CHAR(tur_tarihi, 'YYYY-MM') AS ay,
-        COALESCE(SUM(satis_fiyati), 0)::numeric AS ciro
+        COALESCE(SUM(alis_fiyati), 0)::numeric AS ciro
       FROM biletler
       WHERE tur_tarihi >= DATE_TRUNC('year', CURRENT_DATE)
       GROUP BY TO_CHAR(tur_tarihi, 'YYYY-MM')
@@ -36,7 +36,7 @@ router.get('/ozet', async (req, res) => {
     `);
 
     const sonBiletler = await pool.query(`
-      SELECT id, tur_tarihi, bilet_no, isim, gelen_yer, satis_fiyati, durum
+      SELECT id, tur_tarihi, bilet_no, isim, gelen_yer, alis_fiyati, durum
       FROM biletler
       ORDER BY created_at DESC
       LIMIT 10
