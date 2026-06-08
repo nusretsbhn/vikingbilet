@@ -39,7 +39,17 @@ export default function BiletImport({ open, onClose, onSuccess }) {
     setLoading(true);
     try {
       const result = await importBiletler(file);
-      showToast(`${result.count} bilet içe aktarıldı (${result.sheet})`, 'success');
+      const parts = [
+        result.inserted > 0 ? `${result.inserted} eklendi` : null,
+        result.updated > 0 ? `${result.updated} güncellendi` : null,
+        result.skipped > 0 ? `${result.skipped} atlandı` : null,
+      ].filter(Boolean);
+      showToast(
+        parts.length > 0
+          ? `${parts.join(', ')} (${result.sheet})`
+          : `Değişiklik yok (${result.sheet})`,
+        'success'
+      );
       onSuccess?.();
       handleClose();
     } catch (err) {
@@ -76,7 +86,8 @@ export default function BiletImport({ open, onClose, onSuccess }) {
       <div className="space-y-4">
         <p className="text-xs text-secondary">
           Desteklenen format: <strong className="text-primary">BİLET VİKİNG 2026.xlsx</strong> — sayfa1,
-          3. satırdan itibaren veri okunur.
+          3. satırdan itibaren veri okunur. Mevcut biletler güncellenir, yeniler eklenir,
+          değişmeyenler atlanır.
         </p>
 
         <input

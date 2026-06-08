@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const multer = require('multer');
+const bcrypt = require('bcrypt');
+const pool = require('../db/pool');
 const auth = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 const {
@@ -75,6 +77,49 @@ router.post('/favicon', auth, requireRole('admin'), upload.single('favicon'), as
   } catch (err) {
     console.error('Favicon upload error:', err);
     res.status(500).json({ error: err.message || 'Sunucu hatası' });
+  }
+});
+
+router.post('/purge-data', auth, requireRole('admin'), async (req, res) => {
+  const { password } = req.body;
+
+  if (!password) {
+    return res.status(400).json({ error: 'Şifre gerekli' });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      'SELECT password_hash FROM users WHERE id = $1',
+      [req.user.id]
+    );
+
+    const user = rows[0];
+    if (!user) {
+      return res.status(401).json({ error: 'Kullanıcı bulunamadı' });
+    }
+
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) {
+      return res.status(401).json({ error: 'Şifre hatalı' });
+    }
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('TRUNCATE TABLE tahsilat_kayitlari RESTART IDENTITY');
+      await client.query('TRUNCATE TABLE biletler RESTART IDENTITY');
+      await client.query('COMMIT');
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+
+    res.json({ message: 'Tüm bilet ve cari kayıtları silindi' });
+  } catch (err) {
+    console.error('Purge data error:', err);
+    res.status(500).json({ error: 'Veriler silinemedi' });
   }
 });
 

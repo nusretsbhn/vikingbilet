@@ -23,3 +23,8 @@ export function faviconFileUrl(updatedAt) {
   const ts = updatedAt ? new Date(updatedAt).getTime() : Date.now();
   return `/api/settings/favicon?t=${ts}`;
 }
+
+export async function purgeAllData(password) {
+  const { data } = await client.post('/settings/purge-data', { password });
+  return data;
+}

@@ -6,6 +6,7 @@ const auth = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 const { parseVikingBuffer } = require('../utils/excelImport');
 const { normalizeBiletPrices } = require('../utils/fiyat');
+const { syncImportedBiletler } = require('../utils/biletSync');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -267,9 +268,19 @@ router.post('/bulk', requireRole('editor'), async (req, res) => {
     return res.status(400).json({ error: 'Tek seferde en fazla 50 bilet eklenebilir' });
   }
 
-  const valid = biletler.filter((b) => b?.tur_tarihi);
+  const prepared = biletler
+    .map((item) => normalizeBiletPrices(item))
+    .filter((b) => b?.tur_tarihi);
+
+  const valid = prepared.filter((b) => b.alis_fiyati !== null);
+  const skipped = prepared.length - valid.length;
+
   if (valid.length === 0) {
-    return res.status(400).json({ error: 'Tur tarihi olan en az bir satır gerekli' });
+    return res.status(400).json({
+      error: skipped > 0
+        ? 'Kaydedilecek bilet yok. Alış fiyatı girilmiş en az bir satır gerekli.'
+        : 'Tur tarihi olan en az bir satır gerekli',
+    });
   }
 
   const client = await pool.connect();
@@ -278,15 +289,14 @@ router.post('/bulk', requireRole('editor'), async (req, res) => {
     await client.query('BEGIN');
     const created = [];
 
-    for (const item of valid) {
-      const data = normalizeBiletPrices(item);
+    for (const data of valid) {
       const { sql, values } = buildInsertPayload(data, req.user.id);
       const { rows } = await client.query(sql, values);
       created.push(rows[0]);
     }
 
     await client.query('COMMIT');
-    res.status(201).json({ biletler: created, count: created.length });
+    res.status(201).json({ biletler: created, count: created.length, skipped });
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Bilet bulk create error:', err);
@@ -372,34 +382,25 @@ router.post('/import', requireRole('admin'), upload.single('file'), async (req, 
     }
 
     const client = await pool.connect();
-    let inserted = 0;
 
     try {
       await client.query('BEGIN');
 
-      for (const b of biletler) {
-        await client.query(
-          `INSERT INTO biletler (
-            m, notlar, tur_tarihi, bilet_no, buyuk_kisi, kucuk_kisi, free_kisi,
-            satis_fiyati, alis_fiyati, teknede_odeme, otel, oda, isim, iletisim,
-            gelen_yer, durum, son_sira_notu, nakit, kredi_karti, created_by, updated_by
-          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)`,
-          [
-            b.m, b.notlar, b.tur_tarihi, b.bilet_no, b.buyuk_kisi, b.kucuk_kisi, b.free_kisi,
-            b.satis_fiyati, b.alis_fiyati, b.teknede_odeme, b.otel, b.oda, b.isim, b.iletisim,
-            b.gelen_yer, b.durum, b.son_sira_notu, b.nakit, b.kredi_karti,
-            req.user.id, req.user.id,
-          ]
-        );
-        inserted++;
-      }
+      const { inserted, updated, skipped } = await syncImportedBiletler(
+        client,
+        biletler,
+        req.user.id
+      );
 
       await client.query('COMMIT');
       res.json({
-        message: `${inserted} bilet içe aktarıldı`,
-        count: inserted,
+        message: `${inserted} eklendi, ${updated} güncellendi, ${skipped} atlandı`,
+        inserted,
+        updated,
+        skipped,
+        count: inserted + updated,
         sheet: sheetName,
-        skipped: errors.length,
+        parseErrors: errors.length,
       });
     } catch (err) {
       await client.query('ROLLBACK');

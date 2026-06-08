@@ -69,7 +69,8 @@ export default function BiletlerPage() {
     mutationFn: createBiletBulk,
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['biletler'] });
-      showToast(`${result.count} bilet eklendi`, 'success');
+      const skippedNote = result.skipped > 0 ? `, ${result.skipped} satır alış fiyatı boş olduğu için yoksayıldı` : '';
+      showToast(`${result.count} bilet eklendi${skippedNote}`, 'success');
     },
     onError: () => showToast('Toplu kayıt başarısız', 'error'),
   });

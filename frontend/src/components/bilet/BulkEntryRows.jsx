@@ -65,6 +65,10 @@ function rowHasData(row) {
   );
 }
 
+function rowIsSavable(row) {
+  return !!(row.tur_tarihi && row.alis_fiyati !== '');
+}
+
 function lastRowWithDataIndex(rows) {
   let last = -1;
   rows.forEach((r, i) => {
@@ -288,8 +292,13 @@ export default function BulkEntryRows({ columns, onSaveBulk, saving, onClose }) 
     [columns]
   );
 
-  const filledCount = useMemo(
-    () => rows.filter((r) => r.tur_tarihi).length,
+  const savableCount = useMemo(
+    () => rows.filter(rowIsSavable).length,
+    [rows]
+  );
+
+  const skippedCount = useMemo(
+    () => rows.filter((r) => r.tur_tarihi && r.alis_fiyati === '').length,
     [rows]
   );
 
@@ -351,7 +360,7 @@ export default function BulkEntryRows({ columns, onSaveBulk, saving, onClose }) 
   };
 
   const handleSaveAll = async () => {
-    const payloads = rows.filter((r) => r.tur_tarihi).map(rowToPayload);
+    const payloads = rows.filter(rowIsSavable).map(rowToPayload);
     if (payloads.length === 0 || saving) return;
     try {
       await onSaveBulk(payloads);
@@ -387,7 +396,8 @@ export default function BulkEntryRows({ columns, onSaveBulk, saving, onClose }) 
                 Toplu Giriş
               </span>
               <span className="text-xs text-secondary">
-                Ok tuşları gezin · Tab/Enter ↓ alt satır · Ctrl+Enter kaydet · {filledCount} kayıt hazır
+                Ok tuşları gezin · Tab/Enter ↓ alt satır · Ctrl+Enter kaydet · {savableCount} kayıt hazır
+                {skippedCount > 0 ? ` · ${skippedCount} satır alış fiyatı boş (yoksayılacak)` : ''}
               </span>
               <div className="flex-1" />
               <Button size="sm" variant="ghost" onClick={handleClear} disabled={saving}>
@@ -396,9 +406,9 @@ export default function BulkEntryRows({ columns, onSaveBulk, saving, onClose }) 
               <Button
                 size="sm"
                 onClick={handleSaveAll}
-                disabled={saving || filledCount === 0}
+                disabled={saving || savableCount === 0}
               >
-                {saving ? 'Kaydediliyor...' : `${filledCount} Bilet Kaydet`}
+                {saving ? 'Kaydediliyor...' : `${savableCount} Bilet Kaydet`}
               </Button>
               <Button size="sm" variant="ghost" onClick={onClose} disabled={saving}>
                 Kapat
