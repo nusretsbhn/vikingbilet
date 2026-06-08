@@ -48,12 +48,22 @@ function buildMatchKey(b) {
     return `no:${date}|${biletNo.toLowerCase()}`;
   }
 
-  const isim = normStr(b.isim)?.toLowerCase() || '';
-  const acenta = normStr(b.gelen_yer)?.toLowerCase() || '';
-  const buyuk = normInt(b.buyuk_kisi);
-  const kucuk = normInt(b.kucuk_kisi);
+  const parts = [
+    date,
+    normStr(b.gelen_yer)?.toLowerCase() || '',
+    normStr(b.isim)?.toLowerCase() || '',
+    normInt(b.buyuk_kisi),
+    normInt(b.kucuk_kisi),
+    normInt(b.free_kisi),
+    normStr(b.otel)?.toLowerCase() || '',
+    normStr(b.oda)?.toLowerCase() || '',
+    normNum(b.alis_fiyati),
+    normNum(b.satis_fiyati),
+    normMoneyZero(b.teknede_odeme),
+    normStr(b.iletisim)?.toLowerCase() || '',
+  ];
 
-  return `row:${date}|${acenta}|${isim}|${buyuk}|${kucuk}`;
+  return `row:${parts.join('|')}`;
 }
 
 function snapshotForCompare(b) {
@@ -143,8 +153,7 @@ async function syncImportedBiletler(client, biletler, userId) {
 
     if (!existing) {
       const { sql, values } = buildInsertPayload(data, userId);
-      const { rows } = await client.query(sql, values);
-      existingByKey.set(key, rows[0]);
+      await client.query(sql, values);
       inserted++;
       continue;
     }
