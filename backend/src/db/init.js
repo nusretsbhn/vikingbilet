@@ -49,6 +49,7 @@ CREATE INDEX IF NOT EXISTS idx_biletler_tur_tarihi ON biletler(tur_tarihi);
 CREATE INDEX IF NOT EXISTS idx_biletler_gelen_yer  ON biletler(gelen_yer);
 CREATE INDEX IF NOT EXISTS idx_biletler_durum      ON biletler(durum);
 CREATE INDEX IF NOT EXISTS idx_biletler_bilet_no   ON biletler(bilet_no);
+CREATE INDEX IF NOT EXISTS idx_biletler_m          ON biletler(m) WHERE m IS NOT NULL AND TRIM(m) != '';
 
 CREATE TABLE IF NOT EXISTS tahsilat_kayitlari (
   id               SERIAL PRIMARY KEY,

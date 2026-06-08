@@ -41,6 +41,11 @@ async function migrate() {
       ) STORED
     `);
 
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_biletler_m ON biletler(m)
+      WHERE m IS NOT NULL AND TRIM(m) != ''
+    `);
+
     await client.query('COMMIT');
     console.log('Database migration completed successfully.');
   } catch (err) {

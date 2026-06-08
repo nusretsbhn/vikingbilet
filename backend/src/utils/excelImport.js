@@ -1,4 +1,5 @@
 const XLSX = require('xlsx');
+const { normSiraNo } = require('./biletSync');
 
 const SHEET_NAME = 'sayfa1';
 const DATA_START_ROW = 3;
@@ -101,7 +102,7 @@ function rowToBilet(row) {
   const toPayRaw = cell(row, COL.TEKNEDE_ODEME);
 
   return {
-    m: cell(row, COL.M),
+    m: normSiraNo(cell(row, COL.M)),
     notlar: cell(row, COL.NOTLAR),
     tur_tarihi: turTarihi,
     bilet_no: cell(row, COL.BILET_NO) ? String(cell(row, COL.BILET_NO)) : null,

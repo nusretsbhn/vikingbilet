@@ -4,6 +4,7 @@ const SHEET_NAME = 'sayfa1';
 const DATA_START_ROW = 3;
 
 const COL = {
+  SIRA: 1,
   TUR_TARIHI: 3,
   BILET_NO: 4,
   BUYUK_KISI: 5,
@@ -73,6 +74,7 @@ export function parseVikingPreview(buffer) {
     total++;
     if (preview.length < 5) {
       preview.push({
+        'Sıra': cell(row, COL.SIRA) ?? '—',
         'Tur Tarihi': turTarihi,
         'Bilet No': cell(row, COL.BILET_NO) || '—',
         'Büyük': cell(row, COL.BUYUK_KISI) || 0,

@@ -39,17 +39,25 @@ function normInt(val) {
   return Number.isNaN(n) ? 0 : n;
 }
 
+function normSiraNo(val) {
+  if (val === null || val === undefined || val === '') return null;
+  const s = String(val).trim();
+  if (!s) return null;
+  const n = parseInt(s, 10);
+  if (!Number.isNaN(n)) return String(n);
+  return s;
+}
+
 function buildMatchKey(b) {
+  const sira = normSiraNo(b.m);
+  if (sira) return `sira:${sira}`;
+
   const date = normDate(b.tur_tarihi);
   if (!date) return null;
 
-  const biletNo = normStr(b.bilet_no);
-  if (biletNo) {
-    return `no:${date}|${biletNo.toLowerCase()}`;
-  }
-
   const parts = [
     date,
+    normStr(b.bilet_no)?.toLowerCase() || '',
     normStr(b.gelen_yer)?.toLowerCase() || '',
     normStr(b.isim)?.toLowerCase() || '',
     normInt(b.buyuk_kisi),
@@ -63,12 +71,12 @@ function buildMatchKey(b) {
     normStr(b.iletisim)?.toLowerCase() || '',
   ];
 
-  return `row:${parts.join('|')}`;
+  return parts.join('|');
 }
 
 function snapshotForCompare(b) {
   return {
-    m: normStr(b.m),
+    m: normSiraNo(b.m),
     notlar: normStr(b.notlar),
     tur_tarihi: normDate(b.tur_tarihi),
     bilet_no: normStr(b.bilet_no),
@@ -123,14 +131,26 @@ async function syncImportedBiletler(client, biletler, userId) {
     return { inserted: 0, updated: 0, skipped: 0 };
   }
 
-  const dates = biletler.map((b) => b.tur_tarihi).filter(Boolean);
-  const minDate = dates.reduce((a, b) => (a < b ? a : b));
-  const maxDate = dates.reduce((a, b) => (a > b ? a : b));
+  const siraList = [...new Set(biletler.map((b) => normSiraNo(b.m)).filter(Boolean))];
 
-  const { rows: existingRows } = await client.query(
-    'SELECT * FROM biletler WHERE tur_tarihi >= $1 AND tur_tarihi <= $2',
-    [minDate, maxDate]
-  );
+  let existingRows = [];
+  if (siraList.length > 0) {
+    const result = await client.query(
+      `SELECT * FROM biletler
+       WHERE m IS NOT NULL AND TRIM(m) != '' AND m = ANY($1::text[])`,
+      [siraList]
+    );
+    existingRows = result.rows;
+  } else {
+    const dates = biletler.map((b) => b.tur_tarihi).filter(Boolean);
+    const minDate = dates.reduce((a, b) => (a < b ? a : b));
+    const maxDate = dates.reduce((a, b) => (a > b ? a : b));
+    const result = await client.query(
+      'SELECT * FROM biletler WHERE tur_tarihi >= $1 AND tur_tarihi <= $2',
+      [minDate, maxDate]
+    );
+    existingRows = result.rows;
+  }
 
   const existingByKey = new Map();
   for (const row of existingRows) {
@@ -177,11 +197,10 @@ async function syncImportedBiletler(client, biletler, userId) {
     fields.push(`updated_by = $${idx++}`, 'updated_at = NOW()');
     values.push(userId, existing.id);
 
-    const { rows } = await client.query(
-      `UPDATE biletler SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`,
+    await client.query(
+      `UPDATE biletler SET ${fields.join(', ')} WHERE id = $${idx}`,
       values
     );
-    existingByKey.set(key, rows[0]);
     updated++;
   }
 
@@ -190,6 +209,8 @@ async function syncImportedBiletler(client, biletler, userId) {
 
 module.exports = {
   buildMatchKey,
+  normSiraNo,
   recordsEqual,
+  snapshotForCompare,
   syncImportedBiletler,
 };
